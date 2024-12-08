@@ -16,19 +16,15 @@ def run():
 
     for coord_map in (character_coord_map.items()):
         coords = coord_map[1]
-        # if coord_map[0] == 'A':
-        #     continue
         for index, coord in enumerate(coords):
             all_coords.append(coord)
             for compare_coord in coords[index + 1:]:
                 anti_nodes.extend(compare_coords(coord, compare_coord))
 
     valid_anti_nodes = list(filter(lambda anti_node: in_bounds(anti_node, max_bounds), anti_nodes))
-    anti_nodes = list(filter(lambda anti_node: anti_node not in all_coords, valid_anti_nodes))
 
-    print_anti_nodes(anti_nodes, input_lines)
-    print(len(anti_nodes))
-    print("Must be greater than 357")
+    print_anti_nodes(valid_anti_nodes, input_lines)
+    print(len(set(valid_anti_nodes)))
 
 def compare_coords(coord: tuple[int, int], compare_coord: tuple[int, int]) -> list[tuple[int, int]]:
     diff_x = coord[0] - compare_coord[0]
@@ -51,8 +47,6 @@ def parse_inputs(input_lines: list[str]):
                 coords = char_coord_map.get(character, [])
                 coords.append((x, y))
                 char_coord_map[character] = coords
-        # line = line.replace("#", '.')
-        # print(line)
     return char_coord_map
 
 def print_anti_nodes(anti_nodes, input_lines):
