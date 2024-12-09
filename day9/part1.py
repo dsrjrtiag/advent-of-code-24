@@ -35,30 +35,31 @@ def run():
 
 
     only_files = list(filter(lambda spot: not spot.is_gap, spaces))
-    file_values = ''
+    expand_files = []
     for file in only_files:
-        file_values += (str(file.name) * file.num_of_spaces)
+        for i in range(file.num_of_spaces):
+            expand_files.append(file.name)
 
-    file_value_list = list(file_values)
+    file_value_queue = list(expand_files)
 
-    output = ''
+    output = []
     for spot in spaces:
-        if len(file_value_list) == 0:
+        if len(file_value_queue) == 0:
             break
         if spot.is_gap:
             for i in range(spot.num_of_spaces):
-                output += file_value_list.pop()
+                output.append(file_value_queue.pop())
         else:
             for i in range(spot.num_of_spaces):
-                if len(file_value_list) == 0:
+                if len(file_value_queue) == 0:
                     break
-                output += file_value_list.pop(0)
+                output.append(file_value_queue.pop(0))
             
-    print(output)
+    print(''.join(output))
 
     checksum = 0
-    for index, character in enumerate(output):
-        checksum += index * int(character)
+    for index, name in enumerate(output):
+        checksum += index * int(name)
 
     print(checksum)
 
