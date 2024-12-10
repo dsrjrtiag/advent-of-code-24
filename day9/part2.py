@@ -50,7 +50,7 @@ def run():
     only_files = list(name_file_map.values())
 
     current_gap = 0
-    output = ""
+    output = []
     in_gap = False
     for spot in spaces:
         if len(only_files) < 1:
@@ -69,7 +69,7 @@ def run():
             while len(files_that_fit) > 0:
                 highest_fit_file = files_that_fit[0]
 
-                output += file_str(output, highest_fit_file)
+                output.extend(file_str(output, highest_fit_file))
                 current_gap -= highest_fit_file.num_of_spaces
                 only_files.remove(highest_fit_file)
                 
@@ -79,27 +79,30 @@ def run():
                 spaces.remove(highest_fit_file)
                 spaces_file_map[highest_fit_file.num_of_spaces].remove(highest_fit_file)
                 files_that_fit = get_files_that_fit(spaces_file_map, current_gap)
+                files_that_fit.sort(key=lambda file: int(file.name), reverse=True)
             if(current_gap > 0):
                 empty_spot = Spot("0", current_gap, True)
-                output += file_str(output, empty_spot)
+                output.extend(file_str(output, empty_spot))
 
             in_gap = False
             current_gap = 0
 
             if spot.name.startswith("inserted_gapfor"):
                 empty_spot = Spot("0", spot.num_of_spaces, True)
-                output += file_str(output, empty_spot)
+                output.extend(file_str(output, empty_spot))
+                continue
 
             if spot in only_files:
-                output += file_str(output, spot)
+                output.extend(file_str(output, spot))
                 only_files.remove(spot)
+                spaces_file_map[spot.num_of_spaces].remove(spot)
     print(output)
 
     checksum = 0
     for index, character in enumerate(output):
         checksum += index * int(character)
 
-    print("Must be higher than 5012032747613")
+    print("Must be higher than 6227013071554")
     print(checksum)
 
 def get_files_that_fit(spaces_file_map, current_gap):
@@ -112,45 +115,10 @@ def get_files_that_fit(spaces_file_map, current_gap):
     return files_that_fit
 
 def file_str(output: str, spot: Spot):
-    output = ""
+    output = []
     for i in range(spot.num_of_spaces):
-        output += spot.name
+        output.append(int(spot.name))
     return output
-            
-
-def sort_by_name(file_x: Spot, file_y: Spot):
-    # names are unique, don't worry about equals
-    return int(file_x.name) > int(file_y.name)
-
-    # expand_files = []
-    # for file in only_files:
-    #     for i in range(file.num_of_spaces):
-    #         expand_files.append(file.name)
-
-    # file_value_queue = list(expand_files)
-
-    # output = []
-    # current_gap = 0
-    # for spot in spaces:
-    #     if len(file_value_queue) == 0:
-    #         break
-    #     if spot.is_gap:
-    #         current_gap += 1
-    #         for i in range(spot.num_of_spaces):
-    #             output.append(file_value_queue.pop())
-    #     else:
-    #         for i in range(spot.num_of_spaces):
-    #             if len(file_value_queue) == 0:
-    #                 break
-    #             output.append(file_value_queue.pop(0))
-            
-    print(''.join(output))
-
-    checksum = 0
-    for index, name in enumerate(output):
-        checksum += index * int(name)
-
-    print(checksum)
 
     
 def main():
