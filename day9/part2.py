@@ -7,120 +7,84 @@ input_file = "input.txt"
 valid_names = "[\w]"
 
 @dataclass
-class Spot:
-    name: str
-    num_of_spaces: int
-    is_gap: bool
+class File:
+    name: int
+    spaces: int
+
+@dataclass
+class Gap:
+    name = 0
+    spaces:int
 
 def run():
     input_lines = read_lines(__file__, input_file_name=input_file)
     input = input_lines[0]
 
-    count = 0
-    name_file_map: dict[int, Spot] = {} 
-    spaces_file_map: list[list[Spot]] = [[],
-                                         [],
-                                         [],
-                                         [],
-                                         [],
-                                         [],
-                                         [],
-                                         [],
-                                         [],
-                                         []]
-    spaces: list[Spot] = []
+    all_files: list[File] = []
+    all_spaces = []
 
-    for index, character in enumerate(input):
-        in_gap = index % 2 != 0
-        name = str(count)
-        num_of_spaces = int(character)
-        
-        spot = Spot(name=name, num_of_spaces=num_of_spaces, is_gap=in_gap)
-        spaces.append(spot)
-
-        if in_gap:
-            count += 1
+    for index, num_spaces in enumerate(input):
+        if index % 2 == 0:
+            space = File(len(all_files), int(num_spaces))
+            all_files.append(space)
         else:
-            name_file_map[count] = spot
-            spaces_file_map[num_of_spaces].insert(0, spot)
-            
-    # for space_map in spaces_file_map.items():
-    #     space_map[1].sort(key=lambda file: int(file.name), reverse=True)
+            space = Gap(int(num_spaces))
+        all_spaces.append(space)
 
-    only_files = list(name_file_map.values())
+    empty_spaces = 0
+    output: list[int] = []
+    for space in all_spaces:
+        if isinstance(space, File) :
+            if empty_spaces > 0:
+                # check if any file will fit in the gap prior to this file
+                fit_files = get_fit_files(all_files, empty_spaces)
 
-    current_gap = 0
-    output = []
-    in_gap = False
-    for spot in spaces:
-        if len(only_files) < 1:
-            break
-        
-        if spot.is_gap and not spot.name.startswith("inserted_gapfor"):
-            in_gap = True
-            current_gap += spot.num_of_spaces
-        if not spot.is_gap or spot.name.startswith("inserted_gapfor"):
-            
-            # fit_files = list(filter(lambda file:file.num_of_spaces <= current_gap , only_files))
-            files_that_fit = get_files_that_fit(spaces_file_map, current_gap)
+                while len(fit_files) > 0:
+                    max_file = max(fit_files, key=lambda file: file.name)
+                    all_files.remove(max_file)
+                    max_file_length = max_file.spaces
 
-            files_that_fit.sort(key=lambda file: int(file.name), reverse=True)
+                    output.extend(space_to_list(max_file))
+                    empty_spaces -= max_file_length
 
-            while len(files_that_fit) > 0:
-                highest_fit_file = files_that_fit[0]
+                    fit_files = get_fit_files(all_files, empty_spaces)
+                if empty_spaces > 0:
+                    output.extend(empty_space_to_list(empty_spaces))
+                    empty_spaces = 0
 
-                output.extend(file_str(output, highest_fit_file))
-                current_gap -= highest_fit_file.num_of_spaces
-                only_files.remove(highest_fit_file)
-                
-                spaces.insert((int(highest_fit_file.name) * 2) + 1, Spot(name="inserted_gapfor" + highest_fit_file.name,
-                                                                        num_of_spaces=highest_fit_file.num_of_spaces,
-                                                                        is_gap=True))
-                spaces.remove(highest_fit_file)
-                spaces_file_map[highest_fit_file.num_of_spaces].remove(highest_fit_file)
-                files_that_fit = get_files_that_fit(spaces_file_map, current_gap)
-                files_that_fit.sort(key=lambda file: int(file.name), reverse=True)
-            if(current_gap > 0):
-                empty_spot = Spot("0", current_gap, True)
-                output.extend(file_str(output, empty_spot))
+            if space not in all_files:
+                output.extend(empty_space_to_list(space.spaces))
+                empty_spaces = 0
+            else:
+                output.extend(space_to_list(space))
+                all_files.remove(space)
+        else:
+            empty_spaces += space.spaces
 
-            in_gap = False
-            current_gap = 0
+    def checksum(outputs: list[int]) -> int:
+        result = 0
+        for index, spaces in enumerate(outputs):
+            result += index * spaces
+        return result
 
-            if spot.name.startswith("inserted_gapfor"):
-                empty_spot = Spot("0", spot.num_of_spaces, True)
-                output.extend(file_str(output, empty_spot))
-                continue
+    # str_output = "".join(map(str, output))
+    # print(str_output)
+    print(checksum(output))
 
-            if spot in only_files:
-                output.extend(file_str(output, spot))
-                only_files.remove(spot)
-                spaces_file_map[spot.num_of_spaces].remove(spot)
-    print(output)
 
-    checksum = 0
-    for index, character in enumerate(output):
-        checksum += index * int(character)
+def get_fit_files(file_pool: list[File], gap: int) -> list[File]:
+        files_that_fit = []
+        for file in file_pool:
+            if file.spaces <= gap:
+                files_that_fit.append(file)
+        return files_that_fit
 
-    print("Must be higher than 6227013071554")
-    print(checksum)
+def space_to_list(space: File | Gap) -> list[int]:
+    return [space.name for i in range(space.spaces)]
 
-def get_files_that_fit(spaces_file_map, current_gap):
-    fit_file_lists = spaces_file_map[0: current_gap + 1]
-    files_that_fit = []
+def empty_space_to_list(spaces: int) -> list[int]:
+    return [0 for i in range(spaces)]
 
-    for index, file_list in enumerate(fit_file_lists):
-        if len(file_list)> 0:
-            files_that_fit.append(file_list[0])
-    return files_that_fit
-
-def file_str(output: str, spot: Spot):
-    output = []
-    for i in range(spot.num_of_spaces):
-        output.append(int(spot.name))
-    return output
-
-    
 def main():
     run()
 
