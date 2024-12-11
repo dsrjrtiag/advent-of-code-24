@@ -8,6 +8,8 @@ input_file = "input.txt"
 class Coord:
     x: int
     y: int
+    def __hash__(self):
+        return self.x * self.y
 
 def run():
     input_lines = read_lines(__file__, input_file_name=input_file)
@@ -15,31 +17,32 @@ def run():
 
     trailheads = find_trailheads(input_ints)
     max = len(input_lines) - 1
-
+    
     valid_trails = [get_trails(trailhead, max, input_ints) for trailhead in trailheads]
 
-    print(valid_trails)
+    print(sum(list(map(len, list(map(set, valid_trails))))))
 
-def score(path: list[Coord]) -> int:
-    sum(map(get_height))
 
-def get_trails(trailhead: Coord, max: int, input_ints: list[list[int]], stops: int = 0) -> int:
+def get_trails(trailhead: Coord, max: int, input_ints: list[list[int]], stops: int = 0, count: int = 0) -> list[Coord]:
     stops += 1
     head_height = get_height(trailhead, input_ints)
+    if trailhead == Coord(0, 3):
+        print("break")
 
     if head_height == 9:
-        return 1
+        count += 1
+        return [trailhead]
 
     coords_to_check = get_surrounding(trailhead, max)
     valid_paths = list(filter(lambda coord: get_height(coord, input_ints) == head_height + 1, coords_to_check))
 
     if len(valid_paths) > 0:
-        path_count = 0
+        trail_heads = []
         for valid_coord in valid_paths:
-            path_count += get_trails(valid_coord, max, input_ints, stops)
-        return path_count
+            trail_heads.extend(get_trails(valid_coord, max, input_ints, stops, count))
+        return trail_heads
     else:
-        return 0
+        return []
 
 def get_height(coord: Coord, input_ints: list[list[int]]):
     return input_ints[coord.y][coord.x]
