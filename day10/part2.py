@@ -20,27 +20,27 @@ def run():
     
     valid_trails = [get_trails(trailhead, max, input_ints) for trailhead in trailheads]
 
-    print(sum(list(map(len, list(map(set, valid_trails))))))
+    print(sum(valid_trails))
 
 
-def get_trails(trailhead: Coord, max: int, input_ints: list[list[int]], stops: int = 0, count: int = 0) -> list[Coord]:
+def get_trails(trailhead: Coord, max: int, input_ints: list[list[int]], stops: int = 0, count: int = 0) -> int:
     stops += 1
     head_height = get_height(trailhead, input_ints)
 
     if head_height == 9:
         count += 1
-        return [trailhead]
+        return 1
 
     coords_to_check = get_surrounding(trailhead, max)
     valid_paths = list(filter(lambda coord: get_height(coord, input_ints) == head_height + 1, coords_to_check))
 
     if len(valid_paths) > 0:
-        trail_heads = []
+        complete_paths = 0
         for valid_coord in valid_paths:
-            trail_heads.extend(get_trails(valid_coord, max, input_ints, stops, count))
-        return trail_heads
+            complete_paths += get_trails(valid_coord, max, input_ints, stops, count)
+        return complete_paths
     else:
-        return []
+        return 0
 
 def get_height(coord: Coord, input_ints: list[list[int]]):
     return input_ints[coord.y][coord.x]
